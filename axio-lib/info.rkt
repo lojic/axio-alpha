@@ -1,6 +1,6 @@
 #lang info
 (define collection "axio-lib")
-(define deps '("base"))
+(define deps '("gregor" "threading" "base"))
 (define build-deps '())
 (define pkg-desc "Axio Web Framework Implementation")
 (define version "0.0")
