@@ -22,10 +22,12 @@
             (-> vector? exact-nonnegative-integer? (or/c string? #f)) ]
           [ db-write-date
             (-> date? (or/c sql-date? sql-null?)) ]
+          [ db-write-string
+            (-> (or/c string? #f) (or/c string? sql-null?)) ]
           [ db-write-timestamptz
-            (-> moment-provider? (or/c sql-timestamp? sql-null?)) ]
+            (-> (or/c moment-provider? #f) (or/c sql-timestamp? sql-null?)) ]
           [ sql-timestamp->moment
-            (-> sql-timestamp? moment-provider?) ]
+            (-> (or/c sql-timestamp? sql-null?) (or/c moment-provider? #f)) ]
           [ where-string-values
             (-> (listof (cons/c string? any/c)) (values string? list?)) ]))
 
@@ -73,22 +75,26 @@
       (date->sql-date obj)
       sql-null))
 
+(define (db-write-string s) (if s s sql-null))
+
 (define (db-write-timestamptz obj)
   (if obj
       (moment->sql-timestamp obj)
       sql-null))
 
 (define (sql-timestamp->moment sql-time)
-  (define m (moment
-             (sql-timestamp-year       sql-time)
-             (sql-timestamp-month      sql-time)
-             (sql-timestamp-day        sql-time)
-             (sql-timestamp-hour       sql-time)
-             (sql-timestamp-minute     sql-time)
-             (sql-timestamp-second     sql-time)
-             (sql-timestamp-nanosecond sql-time)
-             #:tz (sql-timestamp-tz sql-time)))
-  (adjust-timezone m (current-timezone)))
+  (if (sql-null? sql-time)
+      #f
+      (let ([ m (moment
+                 (sql-timestamp-year       sql-time)
+                 (sql-timestamp-month      sql-time)
+                 (sql-timestamp-day        sql-time)
+                 (sql-timestamp-hour       sql-time)
+                 (sql-timestamp-minute     sql-time)
+                 (sql-timestamp-second     sql-time)
+                 (sql-timestamp-nanosecond sql-time)
+                 #:tz (sql-timestamp-tz sql-time)) ])
+        (adjust-timezone m (current-timezone)))))
 
 ;; (where-string-values lst) -> (values string? list?)
 ;; lst : (listof (cons/c string? any/c))

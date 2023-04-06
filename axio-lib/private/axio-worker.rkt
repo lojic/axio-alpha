@@ -12,5 +12,5 @@
 ;; --------------------------------------------------------------------------------------------
 
 (define (axio-worker-thread thunk)
-  (parameterize ([ current-custodian axio-worker-custodian ])
+  (parameterize ([ current-custodian (get-axio-worker-custodian) ])
     (thread thunk)))

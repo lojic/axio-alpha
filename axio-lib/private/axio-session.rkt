@@ -48,7 +48,7 @@
 (define (create-session-cookie session)
   (make-id-cookie "session"
                   (serialize-session session)
-                  #:key (axio-config-app-secret a-axio-config)
+                  #:key (axio-config-app-secret (get-axio-config))
                   #:path "/"
                 ; #:secure #t  ; requires https
                   #:max-age (+ thirty-days-seconds (seconds-until-midnight))
@@ -115,7 +115,7 @@
                         request
                         #:name "session"
                         #:shelf-life thirty-days-seconds
-                        #:key (axio-config-app-secret a-axio-config))))
+                        #:key (axio-config-app-secret (get-axio-config)))))
 
 (define (seconds-until-midnight)
   (let* ([ t1    (now)                                  ]

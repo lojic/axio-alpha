@@ -17,15 +17,16 @@
     (format "from=~a, to=~a, subject=~a, error=~a"
             from to subject (exn-message e)))
   (with-handlers ([ exn:fail? format-error ])
-    (smtp-send-message (axio-smtp-config-server a-axio-smtp-config)
-                       from
-                       to
-                       (standard-message-header from to '() '() subject)
-                       message-lines
-                       #:port-no     (axio-smtp-config-port a-axio-smtp-config)
-                       #:auth-user   (axio-smtp-config-username a-axio-smtp-config)
-                       #:auth-passwd (axio-smtp-config-password a-axio-smtp-config)
-                       #:tls-encode  ports->ssl-ports)
+    (let ([ smtp-config (get-axio-smtp-config) ])
+      (smtp-send-message (axio-smtp-config-server smtp-config)
+                         from
+                         to
+                         (standard-message-header from to '() '() subject)
+                         message-lines
+                         #:port-no     (axio-smtp-config-port smtp-config)
+                         #:auth-user   (axio-smtp-config-username smtp-config)
+                         #:auth-passwd (axio-smtp-config-password smtp-config)
+                         #:tls-encode  ports->ssl-ports))
     #f))
 
 ;; main module to test email configuration

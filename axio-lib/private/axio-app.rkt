@@ -37,11 +37,12 @@
 ;; --------------------------------------------------------------------------------------------
 
 (define (axio-app-init config route #:db [ db #f ] #:smtp [ smtp #f ])
-  (axio-init-config config #:db-config db #:smtp-config smtp)
-  
-  (let* ([ instance-id  (string->number (vector-ref (current-command-line-arguments) 0)) ]
+  (let* ([ axio-context (axio-init config
+                                   #:db-config db
+                                   #:smtp-config smtp) ]
+         [ instance-id  (string->number (vector-ref (current-command-line-arguments) 0)) ]
          [ port         (+ (axio-config-port-base config) instance-id)                   ]
-         [ axio-context (axio-init)                                                      ])
+         )
     (void
      (serve
       #:dispatch (seq:make (log:make #:format log:extended-format
