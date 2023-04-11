@@ -12,6 +12,8 @@
             (-> axio-db-config? any) ]
           [ db-maybe-date
             (-> vector? exact-nonnegative-integer? (or/c date? #f)) ]
+          [ db-maybe-integer
+            (-> vector? exact-nonnegative-integer? (or/c integer? #f)) ]
           [ db-maybe-string
             (-> vector? exact-nonnegative-integer? (or/c string? #f)) ]
           [ db-maybe-timestamptz
@@ -21,7 +23,9 @@
           [ db-safe-str
             (-> vector? exact-nonnegative-integer? (or/c string? #f)) ]
           [ db-write-date
-            (-> date? (or/c sql-date? sql-null?)) ]
+            (-> (or/c date? #f) (or/c sql-date? sql-null?)) ]
+          [ db-write-integer
+            (-> (or/c integer? #f) (or/c integer? sql-null?)) ]
           [ db-write-string
             (-> (or/c string? #f) (or/c string? sql-null?)) ]
           [ db-write-timestamptz
@@ -67,13 +71,16 @@
         default
         obj)))
 
-(define (db-safe-boolean row idx) (db-safe row idx #f))
-(define (db-safe-str     row idx) (db-safe row idx ""))
+(define (db-safe-boolean row idx)  (db-safe row idx #f))
+(define (db-maybe-integer row idx) (db-safe row idx #f))
+(define (db-safe-str     row idx)  (db-safe row idx ""))
 
 (define (db-write-date obj)
   (if obj
       (date->sql-date obj)
       sql-null))
+
+(define (db-write-integer i) (if i i sql-null))
 
 (define (db-write-string s) (if s s sql-null))
 
