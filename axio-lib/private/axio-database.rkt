@@ -33,7 +33,9 @@
           [ sql-timestamp->moment
             (-> (or/c sql-timestamp? sql-null?) (or/c moment-provider? #f)) ]
           [ where-string-values
-            (-> (listof (cons/c string? any/c)) (values string? list?)) ]))
+            (->* ((listof (cons/c string? any/c)))
+                 (exact-positive-integer?)
+                 (values string? list?)) ]))
 
 ;; --------------------------------------------------------------------------------------------
 ;; Public Interface
@@ -109,27 +111,32 @@
 ;; Given a list of pairs (column_name . value), return two values: a string & a list of values.
 ;; For example: (where-string-values '(("foo" . 7) ("bar" . "baz"))) ->
 ;; (values "1=1 and foo=$1 and bar=$2" '(7 "baz"))
-(define (where-string-values lst)
+(define (where-string-values lst [ idx 1 ])
   ;; ------------------------------------------------------------------------------------------
   ;; Helpers
   ;; ------------------------------------------------------------------------------------------
   (define (add-string-clause str column value i)
-    (if (is-wildcard-value? value)
-        ; like
-        (format "~a and ~a like $~a" str column i)
-        ; =
-        (format "~a and ~a=$~a" str column i)))
+    (cond [ (list? value)
+            ; list
+            (format "~a and ~a = any ($~a)" str column i) ]
+          [ (is-wildcard-value? value)
+            ; like
+            (format "~a and ~a like $~a" str column i) ]
+          [ else
+            ; =
+            (format "~a and ~a = $~a" str column i) ]))
 
   (define (add-value-clause value vals)
     (if (is-wildcard-value? value)
-        (cons (string-replace value #px"\\*$" "%") vals)
+        (cons (string-replace value #px"(^\\*|\\*$)" "%") vals)
         (cons value vals)))
 
   (define (is-wildcard-value? value)
     (and (string? value)
-         (string-suffix? value "*")))
+         (or (string-prefix? value "*")
+             (string-suffix? value "*"))))
   ;; ------------------------------------------------------------------------------------------
-  (let loop ([lst lst] [str "1=1"] [vals '()] [i 1])
+  (let loop ([lst lst] [str "1=1"] [vals '()] [i idx])
     (if (null? lst)
         (values str (reverse vals))
         (let* ([ pair   (car lst)  ]
@@ -184,16 +191,36 @@
   ;; where-string-values
   ;; ------------------------------------------------------------------------------------------
 
+  ; Simple values
   (let-values ([ (where-str where-values)
                  (where-string-values '(("foo" . 7) ("bar" . "baz"))) ])
-    (check-equal? where-str "1=1 and foo=$1 and bar=$2")
+    (check-equal? where-str "1=1 and foo = $1 and bar = $2")
     (check-equal? where-values '(7 "baz")))
 
-  ; String with wildcard *
+  ; List values
+  (let-values ([ (where-str where-values)
+                 (where-string-values (list (cons "foo" '(7 8)))) ])
+    (check-equal? where-str "1=1 and foo = any ($1)")
+    (check-equal? where-values '((7 8)))
+    )
+
+  ; String with wildcard * at beginning
+  (let-values ([ (where-str where-values)
+                 (where-string-values '(("foo" . "*val") ("bar" . "baz"))) ])
+    (check-equal? where-str "1=1 and foo like $1 and bar = $2")
+    (check-equal? where-values '("%val" "baz")))
+
+  ; String with wildcard * at end
   (let-values ([ (where-str where-values)
                  (where-string-values '(("foo" . "val*") ("bar" . "baz"))) ])
-    (check-equal? where-str "1=1 and foo like $1 and bar=$2")
+    (check-equal? where-str "1=1 and foo like $1 and bar = $2")
     (check-equal? where-values '("val%" "baz")))
+
+  ; String with wildcard * at both beginning and end
+  (let-values ([ (where-str where-values)
+                 (where-string-values '(("foo" . "*val*") ("bar" . "baz"))) ])
+    (check-equal? where-str "1=1 and foo like $1 and bar = $2")
+    (check-equal? where-values '("%val%" "baz")))
 
 
   )
