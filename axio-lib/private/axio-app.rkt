@@ -71,7 +71,8 @@
   (define (run)
     (define (handle-exception e)
       ((error-display-handler) (exn-message e) e)
-      (render-string "<html><body>An error has occurred</body></html>"))
+      ;; TODO allow user to specify error response e.g. HTML vs. JSON
+      (render-string "{ \"errors\" : [\"internal error\"] }"))
 
     (with-handlers ([ exn:fail? handle-exception ])
       (let* ([ ctx (build-webctx request
