@@ -27,7 +27,7 @@
 
 (provide (contract-out
           [ axio-app-init
-            (->* (axio-config? procedure?)
+            (->* (axio-config? procedure? procedure?)
                  (#:db   (or/c axio-db-config? #f)
                   #:smtp (or/c axio-smtp-config? #f))
                  any) ]))
@@ -36,7 +36,7 @@
 ;; Public Interface
 ;; --------------------------------------------------------------------------------------------
 
-(define (axio-app-init config route #:db [ db #f ] #:smtp [ smtp #f ])
+(define (axio-app-init config route url-for #:db [ db #f ] #:smtp [ smtp #f ])
   (let* ([ axio-context (axio-init config
                                    #:db-config db
                                    #:smtp-config smtp) ]
@@ -48,7 +48,7 @@
       #:dispatch (seq:make (log:make #:format log:extended-format
                                      #:log-path "axio-app.log")
                            (lift:make (λ (request)
-                                        (front-controller axio-context request route))))
+                                        (front-controller axio-context request route url-for))))
       #:port port))
 
     (do-not-return)))
@@ -64,22 +64,22 @@
               (integer? userid)
               (get-user conn userid)))))
 
-(define (front-controller axioctx request route)
+(define (front-controller axioctx request route url-for)
   (define conn    (axio-context-db-conn axioctx))
   (define session (get-session request conn))
 
   (define (run)
     (define (handle-exception e)
       ((error-display-handler) (exn-message e) e)
-      ;; TODO allow user to specify error response e.g. HTML vs. JSON
-      (render-string "{ \"errors\" : [\"internal error\"] }"))
+      (render-string "<html><body>An error has occurred</body></html>"))
 
     (with-handlers ([ exn:fail? handle-exception ])
       (let* ([ ctx (build-webctx request
                                  (form-values request)
                                  session
                                  conn
-                                 axioctx) ])
+                                 axioctx
+                                 url-for) ])
         (route ctx))))
 
   (dynamic-wind void
