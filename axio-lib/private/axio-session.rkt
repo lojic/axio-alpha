@@ -30,11 +30,11 @@
           [ serialize-session
             (-> hash? string?) ]
           [ session-get
-            (-> webctx? symbol? (or/c string? #f)) ]
+            (-> webctx? symbol? (or/c string? integer? #f)) ]
           [ session-remove
             (-> webctx? symbol? webctx?) ]
           [ session-set
-            (-> webctx? symbol? string? webctx?) ]))
+            (-> webctx? symbol? (or/c string? integer?) webctx?) ]))
 
 (define thirty-days-seconds (* 30 24 60 60))
 
@@ -50,7 +50,7 @@
                   (serialize-session session)
                   #:key (axio-config-app-secret (get-axio-config))
                   #:path "/"
-                ; #:secure #t  ; requires https
+                  #:secure? #t  ; requires https
                   #:max-age (+ thirty-days-seconds (seconds-until-midnight))
                   #:http-only? #t))
 
