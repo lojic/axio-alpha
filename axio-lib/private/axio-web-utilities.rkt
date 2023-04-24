@@ -11,7 +11,7 @@
 
 (provide (contract-out
           [ form-values
-            (-> request? (hash/c symbol? string?)) ]
+            (-> request? (hash/c string? string?)) ]
           [ get-method?
             (-> webctx? boolean?) ]
           [ http-success-status?
@@ -32,10 +32,10 @@
   (for/hash ([ b (in-list (request-bindings/raw req)) ])
     (cond [ (binding:form? b)
             (values
-             (string->symbol (bytes->string/utf-8 (binding-id b) #\space))
+             (bytes->string/utf-8 (binding-id b) #\space)
              (string-trim (bytes->string/utf-8 (binding:form-value b) #\space))) ]
           [ (binding:file? b) (values
-                               (string->symbol (bytes->string/utf-8 (binding-id b) #\space))
+                               (bytes->string/utf-8 (binding-id b) #\space)
                                (binding:file-content b)) ])))
 
 (define (get-method? ctx)

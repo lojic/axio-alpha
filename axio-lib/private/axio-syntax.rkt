@@ -12,7 +12,7 @@
 (define (axio-format-url path hsh)
   (define (substitute str)
     (if (string-prefix? str "~")
-        (~a (hash-ref hsh (string->symbol (substring str 1))))
+        (~a (hash-ref hsh (substring str 1)))
         str))
   
   (~> (string-split path "/" #:trim? #f)
