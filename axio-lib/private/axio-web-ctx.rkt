@@ -7,7 +7,7 @@
 
 (provide (contract-out
           [ build-webctx
-            (-> request? hash? hash? connection? axio-context? procedure? webctx?) ])
+            (-> request? hash? hash? connection? axio-context? procedure? hash? webctx?) ])
          (struct-out webctx))
 
 (struct webctx (request
@@ -15,7 +15,8 @@
                 session
                 connection
                 axioctx
-                url-for)
+                url-for
+                env)
         #:transparent)
 
 (define (build-webctx request
@@ -23,10 +24,12 @@
                       session
                       connection
                       axioctx
-                      url-for)
+                      url-for
+                      env)
   (webctx request
           attributes
           session
           connection
           axioctx
-          url-for))
+          url-for
+          env))

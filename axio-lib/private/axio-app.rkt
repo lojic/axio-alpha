@@ -79,7 +79,8 @@
                                  session
                                  conn
                                  axioctx
-                                 url-for) ])
+                                 url-for
+                                 (hash)) ])
         (route ctx))))
 
   (dynamic-wind void
