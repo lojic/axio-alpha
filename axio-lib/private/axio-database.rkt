@@ -3,6 +3,7 @@
 (require "./axio-config.rkt")
 
 (require db
+         db/util/postgresql
          gregor
          racket/contract
          racket/string)
@@ -14,6 +15,8 @@
             (-> vector? exact-nonnegative-integer? (or/c date? #f)) ]
           [ db-maybe-integer
             (-> vector? exact-nonnegative-integer? (or/c integer? #f)) ]
+          [ db-maybe-list
+            (-> vector? exact-nonnegative-integer? (or/c list? #f)) ]
           [ db-maybe-string
             (-> vector? exact-nonnegative-integer? (or/c string? #f)) ]
           [ db-maybe-timestamptz
@@ -52,6 +55,12 @@
     (if (sql-null? obj)
         #f
         (sql-date->date obj))))
+
+(define (db-maybe-list row idx)
+  (let ([ obj (vector-ref row idx) ])
+    (if (sql-null? obj)
+        #f
+        (pg-array->list obj))))
 
 (define (db-maybe-string row idx)
   (let ([obj (vector-ref row idx)])
