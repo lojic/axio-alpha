@@ -26,13 +26,17 @@
                          #:port-no     (axio-smtp-config-port smtp-config)
                          #:auth-user   (axio-smtp-config-username smtp-config)
                          #:auth-passwd (axio-smtp-config-password smtp-config)
-                         #:tls-encode  ports->ssl-ports))
+                         #:tls-encode  ssl-encoder))
     #f))
+
+;; This wrapper is required to allow specifying 'tls12 to ports->ssl-ports
+(define (ssl-encoder r w #:mode mode #:encrypt enc #:close-original? close?)
+  (ports->ssl-ports r w #:mode mode #:encrypt 'tls12 #:close-original? close?))
 
 ;; main module to test email configuration
 #;(module+ main
-  (send-email "Fred Flintstone <fred@example.com>"
-              '("Barney Rubble <barney@example.com>")
+  (send-email "Fred Flintstone <brian@lojic.com>"
+              '("Barney Rubble <register@lojic.com>")
               "Test message subject"
               (list
                "Message line one"
