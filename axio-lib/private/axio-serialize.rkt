@@ -7,7 +7,7 @@
             (-> (or/c boolean? bytes? char? hash? list? number? string? symbol? vector?)
                 string?) ]
           [ deserialize
-            (-> string? any) ]))
+            (-> any/c any) ]))
 
 ;; --------------------------------------------------------------------------------------------
 ;; Public Interface
@@ -18,8 +18,10 @@
     (write obj ostr)
     (get-output-string ostr)))
 
-(define (deserialize str)
-  (read (open-input-string str)))
+(define (deserialize obj)
+  (cond [ (string? obj)
+          (read (open-input-string obj)) ]
+        [ else #f ]))
 
 ;; --------------------------------------------------------------------------------------------
 ;; Tests
