@@ -18,15 +18,16 @@
             from to subject (exn-message e)))
   (with-handlers ([ exn:fail? format-error ])
     (let ([ smtp-config (get-axio-smtp-config) ])
-      (smtp-send-message (axio-smtp-config-server smtp-config)
-                         from
-                         to
-                         (standard-message-header from to '() '() subject)
-                         message-lines
-                         #:port-no     (axio-smtp-config-port smtp-config)
-                         #:auth-user   (axio-smtp-config-username smtp-config)
-                         #:auth-passwd (axio-smtp-config-password smtp-config)
-                         #:tls-encode  ssl-encoder))
+      (when (axio-smtp-config-server smtp-config)
+        (smtp-send-message (axio-smtp-config-server smtp-config)
+                           from
+                           to
+                           (standard-message-header from to '() '() subject)
+                           message-lines
+                           #:port-no     (axio-smtp-config-port smtp-config)
+                           #:auth-user   (axio-smtp-config-username smtp-config)
+                           #:auth-passwd (axio-smtp-config-password smtp-config)
+                           #:tls-encode  ssl-encoder)))
     #f))
 
 ;; This wrapper is required to allow specifying 'tls12 to ports->ssl-ports
