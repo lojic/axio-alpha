@@ -3,6 +3,8 @@
 (define deps '("git://github.com/lojic/axio-alpha?path=axio-lib"
                "base"))
 (define build-deps '("scribble-lib" "racket-doc" "rackunit-lib"))
+;; implies: use package names, not sources
+(define implies '("axio-lib"))
 (define scribblings '(("scribblings/axio.scrbl" ())))
 (define pkg-desc "Axio Web Framework")
 (define version "0.0")
