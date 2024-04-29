@@ -16,7 +16,7 @@
          (struct-out axio-db-config)
          (struct-out axio-smtp-config))
 
-(struct axio-config (app-secret port-base params) #:transparent)
+(struct axio-config (app-secret port-base params is-https?) #:transparent)
 
 (struct axio-db-config (server username password database) #:transparent)
 
