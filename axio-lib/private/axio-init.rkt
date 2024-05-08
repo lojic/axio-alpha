@@ -23,11 +23,12 @@
 (define (axio-init config
                    #:db-config   [ db-config #f ]
                    #:smtp-config [ smtp-config #f ]
+                   ;; TODO: this not exposed by axio-app-init
                    #:log-level   [ log-level 'warning ])
   (axio-init-config config
                     #:db-config db-config
                     #:smtp-config smtp-config)
-                    
+
   (axio-init-logger log-level)
 
   (build-axio-context (axio-init-db)))

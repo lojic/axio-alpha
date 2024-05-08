@@ -46,11 +46,12 @@
   (hash-remove session 'flash))
 
 (define (create-session-cookie session)
+  (define config (get-axio-config))
   (make-id-cookie "session"
                   (serialize-session session)
-                  #:key (axio-config-app-secret (get-axio-config))
+                  #:key (axio-config-app-secret config)
                   #:path "/"
-                  #:secure? #t  ; requires https
+                  #:secure? (axio-config-is-https? config)
                   #:max-age (+ thirty-days-seconds (seconds-until-midnight))
                   #:http-only? #t))
 
