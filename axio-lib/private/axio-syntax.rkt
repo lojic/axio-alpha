@@ -45,9 +45,9 @@
 
 (define-syntax (generate-url-for stx)
   (syntax-parse stx
-    [(_ url-for-fun:id (path:string route-name) ...)
+    [(_ url-for-fun:id (path:string (~optional route-name:id)) ...)
      #'(begin
-         (define hsh (make-immutable-hash '((route-name . path) ...)))
+         (define hsh (make-immutable-hash '((~? (route-name . path)) ...)))
 
          (define/contract (url-for-fun a-route-name [ arg (hash) ] #:query [ query-params '() ])
            (->* (symbol?)
@@ -62,8 +62,7 @@
                    #:defaults ([url-for-fun (format-id #'r "axio-url-for")]))
         (path:string
          func:expr
-         (~optional (~seq #:name route-name:id)
-                    #:defaults ([route-name #'#f]))
+         (~optional (~seq #:name route-name:id))
          (~optional (~seq #:when pred?:expr)
                     #:defaults ([pred? #'(const #t)]))
          #;(~optional (~seq #:methods method-lst:expr)
@@ -73,5 +72,5 @@
      #'(begin
          (provide route-fun url-for-fun)
          (generate-router route-fun axio-do-route not-found-func (path func pred?) ...)
-         (generate-url-for url-for-fun (path route-name) ...))]))
+         (generate-url-for url-for-fun (path (~? route-name)) ...))]))
 
