@@ -1,23 +1,33 @@
 #lang racket
 
-(require (for-syntax racket/syntax racket/function racket/string))
-(require (for-syntax syntax/parse))
-(require "./axio-router.rkt")
-(require threading)
+(require (for-syntax racket/syntax
+                     racket/function
+                     racket/string
+                     syntax/parse)
+         "./axio-router.rkt"
+         threading
+         net/uri-codec)
 
 (provide generate-router
          generate-url-for
          routes)
 
-(define (axio-format-url path hsh)
+(define (axio-format-url path hsh query-params)
+
   (define (substitute str)
     (if (string-prefix? str "~")
         (~a (hash-ref hsh (substring str 1)))
         str))
-  
+
+  (define (add-query-params path)
+    (if (empty? query-params)
+        path
+        (~a path "?" (alist->form-urlencoded query-params))))
+
   (~> (string-split path "/" #:trim? #f)
       (map substitute _)
-      (string-join _ "/")))
+      (string-join _ "/")
+      add-query-params))
 
 (define-syntax (generate-router stx)
   (syntax-parse stx
@@ -32,15 +42,19 @@
                [ (axio-match-path-to-route web-request path-nodes (quote route-nodes) pred?)
                  => (λ (path-attrs) (do-route func ctx path-attrs)) ] ...
                [ else (not-found-func ctx) ]))))]))
-  
+
 (define-syntax (generate-url-for stx)
   (syntax-parse stx
     [(_ url-for-fun (path route-name) ...)
      #'(begin
          (define hsh (make-immutable-hash '((route-name . path) ...)))
-         
-         (define (url-for-fun a-route-name [ arg (hash) ])
-           (axio-format-url (hash-ref hsh a-route-name) arg))) ]))
+
+         (define/contract (url-for-fun a-route-name [ arg (hash) ] #:query [ query-params '() ])
+           (->* (symbol?)
+                (hash?
+                 #:query (listof (cons/c symbol? (or/c #f string?))))
+                string?)
+           (axio-format-url (hash-ref hsh a-route-name) arg query-params))) ]))
 
 (define-syntax (routes stx)
   (syntax-parse stx
