@@ -31,7 +31,7 @@
 
 (define-syntax (generate-router stx)
   (syntax-parse stx
-    [(_ route-fun do-route not-found-func (path:string func pred?) ...)
+    [(_ route-fun:id do-route:expr not-found-func:expr (path:string func:expr pred?:expr) ...)
      (define paths (map syntax-e (syntax->list #'(path ...))))
      (define splits (for/list ([ path paths ])
                       (string-split path "/")))
@@ -45,7 +45,7 @@
 
 (define-syntax (generate-url-for stx)
   (syntax-parse stx
-    [(_ url-for-fun (path route-name) ...)
+    [(_ url-for-fun:id (path:string route-name) ...)
      #'(begin
          (define hsh (make-immutable-hash '((route-name . path) ...)))
 
@@ -58,16 +58,17 @@
 
 (define-syntax (routes stx)
   (syntax-parse stx
-    [(r (~optional (~seq #:url-fun url-for-fun:id)
+    [(_ (~optional (~seq #:url-fun url-for-fun:id)
                    #:defaults ([url-for-fun (format-id #'r "axio-url-for")]))
-        (path func
-              (~optional (~seq #:name route-name:id)
-                         #:defaults ([route-name #'#f]))
-              (~optional (~seq #:when pred?:id)
-                         #:defaults ([pred? #'(const #t)]))
-              #;(~optional (~seq #:methods method-lst:expr)
-                           #:defaults ([method-lst #''()]))) ...
-        not-found-func)
+        (path:string
+         func:expr
+         (~optional (~seq #:name route-name:id)
+                    #:defaults ([route-name #'#f]))
+         (~optional (~seq #:when pred?:expr)
+                    #:defaults ([pred? #'(const #t)]))
+         #;(~optional (~seq #:methods method-lst:expr)
+                      #:defaults ([method-lst #''()]))) ...
+        not-found-func:expr)
      #:with route-fun (format-id #'r "axio-route")
      #'(begin
          (provide route-fun url-for-fun)
