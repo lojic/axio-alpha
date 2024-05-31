@@ -31,7 +31,7 @@
 
 (define-syntax (generate-router stx)
   (syntax-parse stx
-    [(_ route-fun:id do-route:expr not-found-func:expr (path:string func:expr pred?:expr) ...)
+    [(_ route-fun:id not-found-func:expr (path:string func:expr pred?:expr) ...)
      (define paths (map syntax-e (syntax->list #'(path ...))))
      (define splits (for/list ([ path paths ])
                       (string-split path "/")))
@@ -40,7 +40,7 @@
            (let-values ([ (web-request method path-nodes) (axio-parse-ctx-path ctx) ])
              (cond
                [ (axio-match-path-to-route web-request path-nodes (quote route-nodes) pred?)
-                 => (λ (path-attrs) (do-route func ctx path-attrs)) ] ...
+                 => (λ (path-attrs) (axio-do-route func ctx path-attrs)) ] ...
                [ else (not-found-func ctx) ]))))]))
 
 (define-syntax (generate-url-for stx)
@@ -71,6 +71,6 @@
      #:with route-fun (format-id #'r "axio-route")
      #'(begin
          (provide route-fun url-for-fun)
-         (generate-router route-fun axio-do-route not-found-func (path func pred?) ...)
+         (generate-router route-fun not-found-func (path func pred?) ...)
          (generate-url-for url-for-fun (path (~? route-name)) ...))]))
 
