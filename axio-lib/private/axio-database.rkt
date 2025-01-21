@@ -29,6 +29,8 @@
             (-> (or/c date? #f) (or/c sql-date? sql-null?)) ]
           [ db-write-integer
             (-> (or/c integer? #f) (or/c integer? sql-null?)) ]
+          [ db-write-list
+            (-> (or/c list? #f) (or/c list? sql-null?)) ]
           [ db-write-string
             (-> (or/c string? #f) (or/c string? sql-null?)) ]
           [ db-write-timestamptz
@@ -92,6 +94,8 @@
       sql-null))
 
 (define (db-write-integer i) (if i i sql-null))
+
+(define (db-write-list l) (if l (list->pg-array l) sql-null))
 
 (define (db-write-string s) (if s s sql-null))
 
