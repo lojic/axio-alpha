@@ -112,11 +112,18 @@
 
 ; (-> request? (or/c hash? #f))
 (define (get-cookie-session request)
-  (deserialize-session (request-id-cookie
-                        request
+  ;; A malformed inbound cookie (e.g. one a client corrupted with stray
+  ;; characters or RFC 2965 $Path/$Domain attributes) makes the web-server's
+  ;; cookie parser raise a contract violation while extracting the id cookie.
+  ;; Treat any such failure as "no session" rather than letting it crash the
+  ;; request, since this happens before the front controller's exception
+  ;; handler is in scope.
+  (deserialize-session
+   (with-handlers ([ exn:fail? (λ (_e) #f) ])
+     (request-id-cookie request
                         #:name "session"
                         #:shelf-life thirty-days-seconds
-                        #:key (axio-config-app-secret (get-axio-config)))))
+                        #:key (axio-config-app-secret (get-axio-config))))))
 
 (define (seconds-until-midnight)
   (let* ([ t1    (now)                                  ]
