@@ -11,7 +11,9 @@
 
 (provide (contract-out
           [ form-values
-            (-> request? (hash/c string? string?)) ]
+            ;; Text form fields map to strings; uploaded files (binding:file?)
+            ;; map to their raw content bytes.
+            (-> request? (hash/c string? (or/c string? bytes?))) ]
           [ get-method?
             (-> webctx? boolean?) ]
           [ http-success-status?
