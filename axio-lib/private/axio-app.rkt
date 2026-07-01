@@ -11,6 +11,7 @@
 (require (prefix-in lift: web-server/dispatchers/dispatch-lift)
          (prefix-in log:  web-server/dispatchers/dispatch-log)
          (prefix-in seq:  web-server/dispatchers/dispatch-sequencer)
+         (only-in db disconnect)
          racket/contract
          web-server/web-server)
 
@@ -83,6 +84,14 @@
                                  (hash)) ])
         (route ctx))))
 
+  ;; Release this thread's leased connection back to the pool. The db conn is
+  ;; a virtual-connection over a connection-pool; a leased actual connection is
+  ;; only auto-returned when the leasing thread dies. Web-server request threads
+  ;; are long-lived under HTTP keep-alive, so without an explicit release the
+  ;; pool (see axio-init-db #:max-connections) is exhausted and subsequent
+  ;; leases fail with "connection pool limit reached". Disconnecting a virtual
+  ;; connection releases only the current thread's actual connection and leaves
+  ;; the virtual connection reusable for the next request.
   (dynamic-wind void
                 run
-                void))
+                (λ () (disconnect conn))))
