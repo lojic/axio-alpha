@@ -50,7 +50,8 @@
   (postgresql-connect #:user     (axio-db-config-username db-config)
                       #:password (axio-db-config-password db-config)
                       #:server   (axio-db-config-server   db-config)
-                      #:database (axio-db-config-database db-config)))
+                      #:database (axio-db-config-database db-config)
+                      #:ssl      'optional))
 
 (define (db-maybe-date row idx)
   (let ([obj (vector-ref row idx)])
